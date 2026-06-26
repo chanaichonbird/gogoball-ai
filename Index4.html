@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Go Go Ball MediaPipe</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, #ffffff, #f8fbff, #eef6ff);
+  color: #0f172a;
+}
+
+header {
+  text-align: center;
+  padding: 18px 10px 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #4f46e5;
+}
+
+.egg-icon {
+  display: inline-block;
+  width: 38px;
+  height: 52px;
+  background: linear-gradient(145deg, #fde68a, #fb923c, #f97316);
+  border-radius: 50% 50% 45% 45%;
+  vertical-align: middle;
+  margin-right: 18px;
+  box-shadow: 0 5px 18px rgba(249,115,22,.35);
+}
+
+.robot-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #dbeafe, #a5b4fc);
+  vertical-align: middle;
+  margin-left: 18px;
+  box-shadow: 0 5px 18px rgba(37,99,235,.25);
+  position: relative;
+}
+
+.robot-icon::before,
+.robot-icon::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  width: 7px;
+  height: 7px;
+  background: #1d4ed8;
+  border-radius: 50%;
+}
+
+.robot-icon::before { left: 13px; }
+.robot-icon::after { right: 13px; }
+
+.robot-mouth {
+  position: absolute;
+  bottom: 10px;
+  width: 18px;
+  height: 4px;
+  background: #1d4ed8;
+  border-radius: 999px;
+}
+
+.subtitle {
+  color: #2563eb;
+  font-size: 18px;
+  letter-spacing: 4px;
+  font-weight: 700;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  padding: 18px 38px;
+}
+
+.team-score {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, .10);
+}
+
+.team-score span {
+  display: block;
+  font-size: 42px;
+  font-weight: 900;
+  color: #2563eb;
+}
+
+.command-box {
+  margin: 10px auto 22px;
+  width: 96%;
+  padding: 26px;
+  background: white;
+  border: 3px solid #2563eb;
+  border-radius: 22px;
+  text-align: center;
+  font-size: 34px;
+  font-weight: 900;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, .18);
+}
+
+.command-label {
+  font-size: 18px;
+  color: #2563eb;
+  margin-bottom: 8px;
+}
+
+.auto-note {
+  display: block;
+  margin-top: 10px;
+  font-size: 22px;
+  color: #ef4444;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 16px 22px;
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .18);
+}
+
+.start { background: #2563eb; }
+.random { background: #f59e0b; }
+.auto { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+.freeze { background: #ef4444; }
+.reset { background: #64748b; }
+.music { background: #0ea5e9; }
+.score-reset { background: #9333ea; }
+.ball { background: linear-gradient(135deg, #f97316, #facc15); color: #111827; }
+.answer-btn { background: #16a34a; }
+
+.camera-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  padding: 20px 34px;
+}
+
+.lane {
+  position: relative;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 18px;
+  text-align: center;
+  border: 1px solid #dbeafe;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .12);
+}
+
+.lane-number {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: white;
+  font-weight: 900;
+  line-height: 30px;
+}
+
+.lane h2 {
+  margin: 0 0 14px;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.bg1 { background: #2563eb; }
+.bg2 { background: #16a34a; }
+.bg3 { background: #7c3aed; }
+.bg4 { background: #f59e0b; }
+
+.team1 { color: #2563eb; }
+.team2 { color: #16a34a; }
+.team3 { color: #7c3aed; }
+.team4 { color: #f59e0b; }
+
+canvas {
+  width: 100%;
+  max-width: 330px;
+  aspect-ratio: 3/4;
+  background: black;
+  border-radius: 20px;
+  border: 4px solid #e5e7eb;
+}
+
+.status {
+  margin: 14px auto 8px;
+  font-size: 30px;
+  font-weight: 900;
+  padding: 14px;
+  border-radius: 16px;
+  color: white;
+}
+
+.waiting { background: #94a3b8; }
+.pass { background: #22c55e; box-shadow: 0 0 20px rgba(34,197,94,.45); }
+.out { background: #ef4444; box-shadow: 0 0 20px rgba(239,68,68,.45); }
+
+.confidence {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.add-score {
+  margin-top: 16px;
+  width: 80%;
+}
+
+.btn1 { background: #2563eb; }
+.btn2 { background: #16a34a; }
+.btn3 { background: #7c3aed; }
+.btn4 { background: #f59e0b; }
+
+.question-box {
+  margin: 10px auto 22px;
+  width: 96%;
+  padding: 24px;
+  background: #fff7ed;
+  border: 3px solid #fb923c;
+  border-radius: 22px;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(249, 115, 22, .18);
+}
+
+.question-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ea580c;
+  margin-bottom: 8px;
+}
+
+.question-text {
+  font-size: 32px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px auto 8px;
+  max-width: 900px;
+}
+
+.choice {
+  padding: 14px;
+  background: #ffffff;
+  border: 2px solid #fed7aa;
+  border-radius: 14px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.choice:hover {
+  background: #ffedd5;
+  transform: scale(1.02);
+}
+
+.correct-choice {
+  background: #16a34a !important;
+  color: white !important;
+  border-color: #16a34a !important;
+}
+
+.wrong-choice {
+  background: #ef4444 !important;
+  color: white !important;
+  border-color: #ef4444 !important;
+}
+
+.question-answer {
+  display: none;
+  margin-top: 12px;
+  padding: 12px;
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  background: #16a34a;
+  border-radius: 14px;
+}
+
+.question-level {
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.footer {
+  margin: 10px 34px 25px;
+  padding: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  color: #1e3a8a;
+  text-align: center;
+  font-size: 18px;
+}
+
+#hidden-video { display: none; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>
+    <span class="egg-icon"></span>
+    GO GO BALL
+    <span class="robot-icon"><span class="robot-mouth"></span></span>
+  </h1>
+  <div class="subtitle">MEDIAPIPE AI POSE DETECTION</div>
+</header>
+
+<div class="scoreboard">
+  <div class="team-score"><b>TEAM 1</b><span id="score1">0</span></div>
+  <div class="team-score"><b>TEAM 2</b><span id="score2">0</span></div>
+  <div class="team-score"><b>TEAM 3</b><span id="score3">0</span></div>
+  <div class="team-score"><b>TEAM 4</b><span id="score4">0</span></div>
+</div>
+
+<div class="command-box">
+  <div class="command-label">🎯 คำสั่งปัจจุบัน</div>
+  <div id="commandText">กด RANDOM COMMAND หรือ AUTO ROUND เพื่อเริ่มรอบใหม่</div>
+</div>
+
+<div class="controls">
+  <button class="start" id="startBtn">🎥 START CAMERA</button>
+  <button class="random" id="randomBtn">🎲 RANDOM COMMAND</button>
+  <button class="auto" id="autoBtn">🚀 AUTO ROUND</button>
+  <button class="music" id="musicBtn">🎵 PLAY MUSIC</button>
+  <button class="freeze" id="freezeBtn">● FREEZE NOW</button>
+  <button class="reset" id="stopMusicBtn">⏹ STOP MUSIC</button>
+  <button class="ball" id="openBallBtn">🥚 OPEN BALL</button>
+  <button class="answer-btn" id="showAnswerBtn">👀 SHOW ANSWER</button>
+  <button class="reset" id="resetBtn">↻ RESET ROUND</button>
+  <button class="score-reset" id="resetScoreBtn">🧹 RESET SCORE</button>
+</div>
+
+<video id="hidden-video" autoplay playsinline></video>
+<audio id="gameMusic" src="music.mp3"></audio>
+
+<div class="camera-grid">
+  <div class="lane">
+    <div class="lane-number bg1">1</div>
+    <h2 class="team1">TEAM 1</h2>
+    <canvas id="lane1"></canvas>
+    <div id="status1" class="status waiting">WAITING</div>
+    <div id="conf1" class="confidence">-</div>
+    <button class="add-score btn1" onclick="addScore(1)">+10 TEAM 1</button>
+  </div>
+
+  <div class="lane">
+    <div class="lane-number bg2">2</div>
+    <h2 class="team2">TEAM 2</h2>
+    <canvas id="lane2"></canvas>
+    <div id="status2" class="status waiting">WAITING</div>
+    <div id="conf2" class="confidence">-</div>
+    <button class="add-score btn2" onclick="addScore(2)">+10 TEAM 2</button>
+  </div>
+
+  <div class="lane">
+    <div class="lane-number bg3">3</div>
+    <h2 class="team3">TEAM 3</h2>
+    <canvas id="lane3"></canvas>
+    <div id="status3" class="status waiting">WAITING</div>
+    <div id="conf3" class="confidence">-</div>
+    <button class="add-score btn3" onclick="addScore(3)">+10 TEAM 3</button>
+  </div>
+
+  <div class="lane">
+    <div class="lane-number bg4">4</div>
+    <h2 class="team4">TEAM 4</h2>
+    <canvas id="lane4"></canvas>
+    <div id="status4" class="status waiting">WAITING</div>
+    <div id="conf4" class="confidence">-</div>
+    <button class="add-score btn4" onclick="addScore(4)">+10 TEAM 4</button>
+  </div>
+</div>
+
+<div class="question-box">
+  <div class="question-title">🥚 GO GO BALL QUESTION | Vocabulary: Places in town</div>
+  <div id="questionText" class="question-text">กด OPEN BALL เพื่อสุ่มคำถาม</div>
+  <div id="choicesBox" class="choices-grid"></div>
+  <div id="questionAnswer" class="question-answer">Answer: -</div>
+  <div id="questionLevel" class="question-level">-</div>
+</div>
+
+<div class="footer">
+  วิธีเล่น: RANDOM COMMAND / AUTO ROUND → นักเรียนทำท่า → FREEZE → ทีมที่ PASS เปิดบอล → OPEN BALL → ตอบคำถาม → SHOW ANSWER
+</div>
+
+<script type="module">
+import {
+  PoseLandmarker,
+  FilesetResolver,
+  DrawingUtils
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+let poseLandmarker;
+let video;
+let scores = [0, 0, 0, 0];
+let currentTarget = "";
+let autoTimer = null;
+let currentQuestion = null;
+
+const MIRROR = true;
+
+const laneCanvases = [];
+const laneCtx = [];
+const offCanvases = [];
+const offCtx = [];
+
+const commands = [
+  { className: "RightHand", hint: "Raise your right hand" },
+  { className: "LeftHand", hint: "Raise your left hand" },
+  { className: "BothHands", hint: "Raise both hands" },
+  { className: "T", hint: "Stretch both arms out to the sides like the letter T" },
+  { className: "V", hint: "Make the letter V above your head" },
+  { className: "I", hint: "Stand straight like the letter I" },
+  { className: "L", hint: "Raise one arm up and stretch the other arm to the side like the letter L" },
+  { className: "C", hint: "Curve your arms to make the letter C" },
+  { className: "O", hint: "Curve both arms into a big round circle" },
+  { className: "Heart", hint: "Make a heart shape with your arms" },
+  { className: "TouchHead", hint: "Touch your head with one hand" },
+  { className: "HandsOnWaist", hint: "Put both hands on your waist" },
+  { className: "CrossArms", hint: "Cross your arms in front of your chest" },
+  { className: "OneHandOnHead", hint: "Put one hand on your head" },
+  { className: "X", hint: "Cross both arms to make the letter X" }
+];
+
+const questions = [
+  { question: "A place you go to have a meal.", answer: "restaurant", choices: ["bank", "restaurant", "museum", "park"], score: 10 },
+  { question: "A place with lots of different shops, cafeterias and restaurants in it.", answer: "shopping mall", choices: ["shopping mall", "bus stop", "library", "market"], score: 10 },
+  { question: "A place where artworks are on display.", answer: "museum", choices: ["museum", "bank", "subway", "restaurant"], score: 10 },
+  { question: "Where you catch the bus.", answer: "bus stop", choices: ["library", "bus stop", "park", "cafeteria"], score: 10 },
+  { question: "A place you withdraw or pay in money.", answer: "bank", choices: ["bank", "market", "museum", "subway"], score: 10 },
+  { question: "Where you catch a train underground.", answer: "subway", choices: ["bus stop", "subway", "shopping mall", "park"], score: 10 },
+  { question: "A place for tea or coffee and cake.", answer: "cafeteria", choices: ["museum", "library", "cafeteria", "bank"], score: 10 },
+  { question: "A place for walking or having fun.", answer: "park", choices: ["park", "restaurant", "subway", "bank"], score: 10 },
+  { question: "A place for reading and borrowing books.", answer: "library", choices: ["market", "library", "bus stop", "shopping mall"], score: 10 },
+  { question: "A place for shopping outside.", answer: "market", choices: ["market", "museum", "cafeteria", "subway"], score: 10 }
+];
+
+document.getElementById("startBtn").addEventListener("click", init);
+document.getElementById("randomBtn").addEventListener("click", randomCommand);
+document.getElementById("autoBtn").addEventListener("click", autoRound);
+document.getElementById("freezeBtn").addEventListener("click", freezeCheck);
+document.getElementById("resetBtn").addEventListener("click", resetRound);
+document.getElementById("musicBtn").addEventListener("click", playMusic);
+document.getElementById("stopMusicBtn").addEventListener("click", stopMusic);
+document.getElementById("resetScoreBtn").addEventListener("click", resetScore);
+document.getElementById("openBallBtn").addEventListener("click", openBall);
+document.getElementById("showAnswerBtn").addEventListener("click", showAnswer);
+
+async function init() {
+  document.getElementById("commandText").innerHTML = "กำลังโหลด MediaPipe...";
+
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+  );
+
+  poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+      delegate: "GPU"
+    },
+    runningMode: "VIDEO",
+    numPoses: 1
+  });
+
+  video = document.getElementById("hidden-video");
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
+    },
+    audio: false
+  });
+
+  video.srcObject = stream;
+  await video.play();
+
+  for (let i = 1; i <= 4; i++) {
+    const canvas = document.getElementById("lane" + i);
+    canvas.width = 300;
+    canvas.height = 400;
+    laneCanvases.push(canvas);
+    laneCtx.push(canvas.getContext("2d"));
+
+    const off = document.createElement("canvas");
+    off.width = 300;
+    off.height = 400;
+    offCanvases.push(off);
+    offCtx.push(off.getContext("2d"));
+  }
+
+  requestAnimationFrame(drawLoop);
+  document.getElementById("commandText").innerHTML = "กล้องพร้อมแล้ว กด RANDOM COMMAND";
+}
+
+function drawLoop() {
+  if (video && video.videoWidth > 0) {
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    const laneW = vw / 4;
+
+    for (let i = 0; i < 4; i++) {
+      const ctx = laneCtx[i];
+      ctx.clearRect(0, 0, 300, 400);
+
+      const sourceX = (3 - i) * laneW;
+
+      ctx.save();
+
+      if (MIRROR) {
+        ctx.translate(300, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(
+        video,
+        sourceX, 0, laneW, vh,
+        0, 0, 300, 400
+      );
+
+      ctx.restore();
+    }
+  }
+
+  requestAnimationFrame(drawLoop);
+}
+
+function randomCommand() {
+  const random = commands[Math.floor(Math.random() * commands.length)];
+  currentTarget = random.className;
+  document.getElementById("commandText").innerHTML = random.hint;
+
+  for (let i = 1; i <= 4; i++) {
+    setStatus(i, "🎵 READY", "waiting", "เตรียมทำท่า");
+  }
+}
+
+function autoRound() {
+  if (!poseLandmarker) {
+    alert("กรุณากด START CAMERA ก่อน");
+    return;
+  }
+
+  if (autoTimer) {
+    clearTimeout(autoTimer);
+    autoTimer = null;
+  }
+
+  randomCommand();
+  playMusic();
+
+  const randomTime = Math.floor(Math.random() * 8000) + 5000;
+  const seconds = (randomTime / 1000).toFixed(1);
+
+  document.getElementById("commandText").innerHTML +=
+    `<span class="auto-note">AI จะสุ่มหยุดภายใน ${seconds} วินาที</span>`;
+
+  autoTimer = setTimeout(() => {
+    freezeCheck();
+  }, randomTime);
+}
+
+async function freezeCheck() {
+  stopMusic();
+
+  if (autoTimer) {
+    clearTimeout(autoTimer);
+    autoTimer = null;
+  }
+
+  if (!poseLandmarker) {
+    alert("กรุณากด START CAMERA ก่อน");
+    return;
+  }
+
+  if (!currentTarget) {
+    alert("กรุณากด RANDOM COMMAND ก่อน");
+    return;
+  }
+
+  document.getElementById("commandText").innerHTML = "🛑 FREEZE! AI CHECKING...";
+
+  for (let i = 0; i < 4; i++) {
+    offCtx[i].drawImage(laneCanvases[i], 0, 0, 300, 400);
+
+    const result = poseLandmarker.detectForVideo(
+      offCanvases[i],
+      performance.now()
+    );
+
+    if (!result.landmarks || result.landmarks.length === 0) {
+      setStatus(i + 1, "❌ OUT", "out", "No person detected");
+      continue;
+    }
+
+    const lm = result.landmarks[0];
+    const pass = checkPose(currentTarget, lm);
+
+    drawLandmarks(i, lm);
+
+    if (pass) {
+      setStatus(i + 1, "✅ PASS", "pass", currentTarget);
+    } else {
+      setStatus(i + 1, "❌ OUT", "out", "Pose not matched");
+    }
+  }
+
+  document.getElementById("commandText").innerHTML =
+    "ตรวจเสร็จแล้ว ✅ ทีมที่ผ่านให้กด OPEN BALL";
+}
+
+function drawLandmarks(index, landmarks) {
+  const utils = new DrawingUtils(laneCtx[index]);
+  utils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, {
+    color: "#2563eb",
+    lineWidth: 3
+  });
+  utils.drawLandmarks(landmarks, {
+    color: "#ef4444",
+    radius: 4
+  });
+}
+
+function checkPose(target, lm) {
+  const NOSE = lm[0];
+  const L_SHOULDER = lm[11];
+  const R_SHOULDER = lm[12];
+  const L_ELBOW = lm[13];
+  const R_ELBOW = lm[14];
+  const L_WRIST = lm[15];
+  const R_WRIST = lm[16];
+  const L_HIP = lm[23];
+  const R_HIP = lm[24];
+
+  const actualLeftWrist = MIRROR ? R_WRIST : L_WRIST;
+  const actualRightWrist = MIRROR ? L_WRIST : R_WRIST;
+  const actualLeftShoulder = MIRROR ? R_SHOULDER : L_SHOULDER;
+  const actualRightShoulder = MIRROR ? L_SHOULDER : R_SHOULDER;
+
+  const leftHandUp = actualLeftWrist.y < actualLeftShoulder.y - 0.04;
+  const rightHandUp = actualRightWrist.y < actualRightShoulder.y - 0.04;
+  const bothHandsUp = leftHandUp && rightHandUp;
+
+  const wristsClose = distance(L_WRIST, R_WRIST) < 0.24;
+  const wristsFar = distance(L_WRIST, R_WRIST) > 0.38;
+
+  const wristAboveHead =
+    L_WRIST.y < NOSE.y + 0.08 &&
+    R_WRIST.y < NOSE.y + 0.08;
+
+  const wristsNearChest =
+    midpointY(L_WRIST, R_WRIST) > midpointY(L_SHOULDER, R_SHOULDER) &&
+    midpointY(L_WRIST, R_WRIST) < midpointY(L_HIP, R_HIP);
+
+  const armsWide =
+    L_WRIST.x < L_SHOULDER.x - 0.08 &&
+    R_WRIST.x > R_SHOULDER.x + 0.08;
+
+  const armsLevel =
+    Math.abs(L_WRIST.y - R_WRIST.y) < 0.25 &&
+    Math.abs(midpointY(L_WRIST, R_WRIST) - midpointY(L_SHOULDER, R_SHOULDER)) < 0.25;
+
+  const bodyStraight =
+    Math.abs(L_WRIST.x - L_SHOULDER.x) < 0.24 &&
+    Math.abs(R_WRIST.x - R_SHOULDER.x) < 0.24 &&
+    L_WRIST.y > L_SHOULDER.y &&
+    R_WRIST.y > R_SHOULDER.y;
+
+  const touchHead =
+    distance(L_WRIST, NOSE) < 0.25 ||
+    distance(R_WRIST, NOSE) < 0.25;
+
+  const handsOnWaist =
+    distance(L_WRIST, L_HIP) < 0.25 &&
+    distance(R_WRIST, R_HIP) < 0.25;
+
+  const crossArms =
+    L_WRIST.x > R_ELBOW.x &&
+    R_WRIST.x < L_ELBOW.x &&
+    wristsNearChest;
+
+  const xPose =
+    L_WRIST.x > R_SHOULDER.x &&
+    R_WRIST.x < L_SHOULDER.x &&
+    midpointY(L_WRIST, R_WRIST) < midpointY(L_HIP, R_HIP);
+
+  const oneHandOnHead =
+    touchHead && !(leftHandUp && rightHandUp);
+
+  switch (target) {
+    case "RightHand":
+      return rightHandUp && !leftHandUp;
+    case "LeftHand":
+      return leftHandUp && !rightHandUp;
+    case "BothHands":
+      return bothHandsUp;
+    case "T":
+      return armsWide && armsLevel;
+    case "V":
+      return bothHandsUp && wristsFar;
+    case "I":
+      return bodyStraight;
+    case "L":
+      return (
+        (rightHandUp && Math.abs(actualLeftWrist.y - actualLeftShoulder.y) < 0.22) ||
+        (leftHandUp && Math.abs(actualRightWrist.y - actualRightShoulder.y) < 0.22)
+      );
+    case "C":
+      return armsWide && !bothHandsUp;
+    case "O":
+      return wristsClose && (wristAboveHead || wristsNearChest);
+    case "Heart":
+      return wristsClose && wristAboveHead;
+    case "TouchHead":
+      return touchHead;
+    case "HandsOnWaist":
+      return handsOnWaist;
+    case "CrossArms":
+      return crossArms;
+    case "OneHandOnHead":
+      return oneHandOnHead;
+    case "X":
+      return xPose;
+    default:
+      return false;
+  }
+}
+
+function openBall() {
+  const q = questions[Math.floor(Math.random() * questions.length)];
+  currentQuestion = q;
+
+  document.getElementById("questionText").innerHTML = q.question;
+  document.getElementById("questionLevel").innerHTML = "Places in town | +" + q.score + " คะแนน";
+  document.getElementById("questionAnswer").style.display = "none";
+  document.getElementById("questionAnswer").innerHTML = "Answer: " + q.answer;
+
+  const shuffledChoices = shuffleArray([...q.choices]);
+  const choicesBox = document.getElementById("choicesBox");
+  choicesBox.innerHTML = "";
+
+  shuffledChoices.forEach((choice, index) => {
+    const letters = ["A", "B", "C", "D"];
+    const div = document.createElement("button");
+    div.className = "choice";
+    div.innerHTML = letters[index] + ". " + choice;
+    div.onclick = function() {
+      checkAnswer(choice, div);
+    };
+    choicesBox.appendChild(div);
+  });
+}
+
+function checkAnswer(choice, selectedButton) {
+  if (!currentQuestion) return;
+
+  const allChoices = document.querySelectorAll(".choice");
+
+  allChoices.forEach(btn => {
+    btn.disabled = true;
+
+    if (btn.innerHTML.toLowerCase().includes(currentQuestion.answer.toLowerCase())) {
+      btn.classList.add("correct-choice");
+    }
+  });
+
+  if (choice.toLowerCase() === currentQuestion.answer.toLowerCase()) {
+    selectedButton.classList.add("correct-choice");
+    document.getElementById("questionAnswer").innerHTML =
+      "✅ Correct! Answer: " + currentQuestion.answer;
+  } else {
+    selectedButton.classList.add("wrong-choice");
+    document.getElementById("questionAnswer").innerHTML =
+      "❌ Wrong! Answer: " + currentQuestion.answer;
+  }
+
+  document.getElementById("questionAnswer").style.display = "block";
+}
+
+function showAnswer() {
+  if (!currentQuestion) {
+    alert("กรุณากด OPEN BALL ก่อน");
+    return;
+  }
+
+  document.getElementById("questionAnswer").style.display = "block";
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function playMusic() {
+  const music = document.getElementById("gameMusic");
+  music.play();
+}
+
+function stopMusic() {
+  const music = document.getElementById("gameMusic");
+  music.pause();
+}
+
+function resetScore() {
+  if (confirm("ต้องการรีเซ็ตคะแนนทั้งหมดหรือไม่?")) {
+    scores = [0, 0, 0, 0];
+
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById("score" + i).innerHTML = 0;
+    }
+  }
+}
+
+function distance(a, b) {
+  return Math.sqrt(
+    Math.pow(a.x - b.x, 2) +
+    Math.pow(a.y - b.y, 2)
+  );
+}
+
+function midpointY(a, b) {
+  return (a.y + b.y) / 2;
+}
+
+function setStatus(team, text, className, detail) {
+  const status = document.getElementById("status" + team);
+  status.className = "status " + className;
+  status.innerHTML = text;
+  document.getElementById("conf" + team).innerHTML = detail;
+}
+
+function resetRound() {
+  if (autoTimer) {
+    clearTimeout(autoTimer);
+    autoTimer = null;
+  }
+
+  stopMusic();
+
+  currentTarget = "";
+  document.getElementById("commandText").innerHTML =
+    "กด RANDOM COMMAND หรือ AUTO ROUND เพื่อเริ่มรอบใหม่";
+
+  for (let i = 1; i <= 4; i++) {
+    setStatus(i, "WAITING", "waiting", "-");
+  }
+}
+
+window.addScore = function(team) {
+  scores[team - 1] += 10;
+  document.getElementById("score" + team).innerHTML = scores[team - 1];
+};
+</script>
+
+</body>
+</html>
